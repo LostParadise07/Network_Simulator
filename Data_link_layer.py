@@ -2,7 +2,8 @@ from Hub import *
 from Switch import *
 import time
 from Broadcast import *
-
+from selectiverepeat import *
+from stopandwait import *
 def Data_link_layer(data3,sourceDevice):
         c3 = int(input("What's your Choice?\n1: HubSwitchHub-Configuration 2: SwitchDevice-Configuration\n"))
         if c3 == 1:
@@ -106,9 +107,8 @@ def Data_link_layer(data3,sourceDevice):
                 # Create switch
                 switch = Switch()
 
-                # Create devices and connect them to the switch
+            # Create devices and connect them to the switch
                 devices = [Device(f"Device {i+1}") for i in range(TotDevices)]
-
                 for i in range(TotDevices):
                     switch.connect(devices[i])
 
@@ -116,35 +116,87 @@ def Data_link_layer(data3,sourceDevice):
                 sourceDevice2 = devices[SourceDevice2 - 1]
                 sourceDevice2.setData(data3)
 
-                start = time.process_time()
+                # Choose token passing or polling
+                c4 = int(input("Choose Token Passing or Polling:\n1: Token Passing 2: Polling\n"))
+                c5 = int(input("Choose ARQ Method:\n1: Stop-and-Wait ARQ 2: Selective Repeat ARQ\n"))
 
-                for j in range(TotDevices):
-                    if j == SourceDevice2 - 1:
-                        continue
-                    for i in range(len(data3)):
-                        devices[destinationDevice2 - 1].data += data3[i]
-                        if j == destinationDevice2 - 1:
-                            print("Received frame number:", i + 1, "at The Destination", j + 1)
-                            print("Received frame number:", i + 1)
-                            print("The source", SourceDevice2, "received the ACK")
-                        else:
+                if c4 == 1 and c5 == 1:
+                    # Token Passing with Stop-and-Wait ARQ
+                    token = None
+                    for i in range(len(devices)):
+                        if devices[i] == sourceDevice2:
+                            token = devices[i]
                             break
-                        
-                time_taken = time.process_time() - start
-                print()
-                print("*******************************************************")
-                print("Total Time Taken for Transmission:", time_taken)
 
-                # Calculate the broadcast domain
-                broadcast_domain = 1
+                    if token is None:
+                        print("Source device is not connected to the switch.")
+                        return
 
-                # Calculate the collision domain
-                collision_domain = TotDevices
+                    # Perform token passing
+                    start = time.process_time()
+                    for i in range(len(data3)):
+                        if devices[i % TotDevices] == token:
+                            continue
+                        devices[i % TotDevices].data += data3[i]
+                        print(f"Received frame number: {i+1} at Device {i % TotDevices + 1}")
 
-                print("Broadcast domain =", broadcast_domain, "and Collision domain =", collision_domain)
+                    time_taken = time.process_time() - start
+                    print()
+                    print("*******************************************************")
+                    print("Total Time Taken for Transmission:", time_taken)
+
+                elif c4 == 1 and c5 == 2:
+                    # Token Passing with Selective Repeat ARQ
+                    window_size = int(input("Enter the window size for Selective Repeat ARQ:\n"))
+                    selective_repeat_arq = SelectiveRepeatARQ(window_size)
+
+                    # Perform token passing
+                    selective_repeat_arq.send_data(data3, devices, sourceDevice2)
+
+                elif c4 == 2 and c5 == 1:
+                    # Polling with Stop-and-Wait ARQ
+                    start = time.process_time()
+                    stop_and_wait_arq = StopAndWaitARQ()
+
+                    # Perform polling
+                    for i in range(len(data3)):
+                        stop_and_wait_arq.send_data(data3[i], devices, sourceDevice2)
+                        print(f"Received frame number: {i+1} at Device {i % TotDevices + 1}")
+
+                    time_taken = time.process_time() - start
+                    print()
+                    print("*******************************************************")
+                    print("Total Time Taken for Transmission:", time_taken)
+
+                elif c4 == 2 and c5 == 2:
+                    # Polling with Selective Repeat ARQ
+                    window_size = int(input("Enter the window size for Selective Repeat ARQ:\n"))
+                    selective_repeat_arq = SelectiveRepeatARQ(window_size)
+
+                    # Perform polling
+                    start = time.process_time()
+                    for i in range(len(data3)):
+                        selective_repeat_arq.send_data(data3[i], devices, sourceDevice2)
+                        print(f"Received frame number: {i+1} at Device {i % TotDevices + 1}")
+
+                    time_taken = time.process_time() - start
+                    print()
+                    print("*******************************************************")
+                    print("Total Time Taken for Transmission:", time_taken)
+
+                else:
+                    print("Invalid Choice")
+                    return
 
             else:
                 print("Invalid Choice")
                 return
+
+# Call the function with the appropriate arguments
+
+
+        else:
+            print("Invalid Choice")
+            return
             
     
