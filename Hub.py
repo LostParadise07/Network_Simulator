@@ -57,7 +57,6 @@ class Hub:
 
 
 class Device:
-    
     def __init__(self, name):
         self.name = name
         self.data = ""
@@ -71,8 +70,8 @@ class Device:
     def setData(self, dat):
         self.data = dat
 
-    def setIPAddress(self, ip_address):
-        self.ipAddress = ip_address
+    def setIPAddress(self, ipAddress):
+        self.ipAddress = ipAddress
 
     def getIPAddress(self):
         return self.ipAddress
@@ -82,9 +81,10 @@ class Device:
 
     def getPort(self):
         return self.port
-    
+
     def getName(self):
         return self.name
+
 
     
 

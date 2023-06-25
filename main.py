@@ -1,4 +1,5 @@
 from Hub import *
+from Hub import Device
 from CRC import *
 from Physical_Layer import physicalLayer
 from Data_link_layer import Data_link_layer
@@ -18,6 +19,14 @@ def main():
         print("*******************************************************")
         print("Entering into Network Layer part\n")
         networkLayer = NetworkLayer()
+        
+
+
+        
+        ripProtocol = RIPProtocol(networkLayer)
+
+
+
 
         # Create an instance of the DHCP class and pass the networkLayer instance
         dhcp = DHCP(networkLayer)
@@ -28,7 +37,12 @@ def main():
         dhcp.requestIP(C)
         dhcp.requestIP(D)
         dhcp.requestIP(E)
+        ripProtocol.updateRoutingTable(A, {"192.168.0.0": "192.168.0.1"})
+        ripProtocol.updateRoutingTable(B, {"192.168.0.0": "192.168.0.2"})
 
+        # Advertise routes
+        ripProtocol.advertiseRoutes(A)
+        ripProtocol.advertiseRoutes(B)
         # Retrieve IP addresses from the network layer
         ip_address_A = networkLayer.getIPAddress(A)
         ip_address_B = networkLayer.getIPAddress(B)
@@ -73,23 +87,39 @@ def main():
         print("*******************************************************")
         print("Entering into Application Layer part\n")
 
-        application_A = ApplicationLayer(A)
-        application_B = ApplicationLayer(B)
-        application_C = ApplicationLayer(C)
-        application_D = ApplicationLayer(D)
-        application_E = ApplicationLayer(E)
+        
+        
 
-        # Devices communicate at the Application Layer
-        application_A.send(B, "Hello, B!")
-        application_B.send(A, "Hi, A!")
-        application_C.send(D, "Greetings, D!")
-        application_D.send(C, "Salutations, C!")
-        application_E.send(A, "Hey, A!")
+        # Set the information for Device A
+        deviceA = Device("Device A")
+        deviceA.setMACaddress("00:00:00:00:00:01")
+        deviceA.setData("Hello, World!")
+        deviceA.setIPAddress("192.168.0.1")
+        deviceA.setPort(5000)
 
+        # Set the information for the destination device (WebServer)
+        destination = Device("WebServer")
+        destination.setIPAddress("192.168.0.10")
+        destination.setPort(80)
 
-        count=input("To Continue Press 1 else exit:")
-        if(count!="1"):
-            break
+        # Set the information for the DNS server
+        dns_server = Device("DNS Server")
+        dns_server.setIPAddress("192.168.0.20")
+        dns_server.setPort(53)
+
+        # Create an application layer
+        appLayer = ApplicationLayer(deviceA)
+
+        # Send an HTTP request
+        request_type = input("Enter 'http' to send an HTTP request or 'dns' to send a DNS request: ")
+        if request_type=='http':
+            appLayer.sendHTTPRequest(destination, "/index.html")
+        elif request_type=='dns':
+        # Send a DNS request
+            appLayer.sendDNSRequest(dns_server, "www.google.com")
+        else:
+            print("Invalid Choice")
 
 if __name__ == "__main__":
     main()
+
